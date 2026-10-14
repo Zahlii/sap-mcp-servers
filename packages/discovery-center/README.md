@@ -19,7 +19,8 @@ This project is unofficial and is not endorsed by SAP. It uses authenticated SAP
 `mission_step` details:
 
 - Discovery Center serves step texts only on a mission the user has started. A mission the user has already started is read as is. Any other mission is **started under the logged-in SAP account** and stays in that user's "My Missions": Discovery Center refuses to cancel it, and completing it would count as a completed mission. The next call reuses it.
-- Steps that link a GitHub file return that file's markdown; `source` keeps the link.
+- Every step comes back as markdown with absolute link and image URLs. Steps that link a GitHub file return that file's markdown; `source` keeps the link. Steps written in Discovery Center's editor are HTML and converted.
+- `relatedMissions` lists the IDs of other missions a step links to, typically the per-application follow-up missions.
 
 ## Setup
 

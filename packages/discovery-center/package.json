@@ -47,10 +47,12 @@
     "@modelcontextprotocol/sdk": "^1.32.1",
     "dotenv": "^18.0.6",
     "playwright": "^1.64.0",
+    "turndown": "^7.2.4",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
+    "@types/turndown": "^5.0.6",
     "rimraf": "^6.0.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2"

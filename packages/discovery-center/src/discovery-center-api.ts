@@ -1,4 +1,5 @@
 import { defaultLogger as logger } from '@marianfoo/sap-mcp-auth';
+import TurndownService from 'turndown';
 import { PACKAGE_VERSION } from './version.js';
 import type {
   MissionDetail,
@@ -19,6 +20,8 @@ const API_URL = `${DISCOVERY_CENTER_URL}/platformx/api/v1`;
 // The approuter forwards the login session only on its /protected route; /platformx answers 401 to every cookie.
 export const PROTECTED_API_URL = `${DISCOVERY_CENTER_URL}/protected/platformx/api/v1`;
 const USER_AGENT = `sap-discovery-center-mcp/${PACKAGE_VERSION}`;
+const HTML_TAG = /<(p|div|br|ul|ol|li|h[1-6]|a|img|table|pre|code|strong|em|span)\b/i;
+const turndown = new TurndownService({ headingStyle: 'atx', bulletListMarker: '-', codeBlockStyle: 'fenced' });
 
 export class SapDiscoveryCenterClient {
   async searchMissions(query: string, top: number): Promise<MissionSearchResult[]> {
@@ -73,7 +76,7 @@ export class SapDiscoveryCenterClient {
       })),
       steps: (cards ?? []).map(card => ({
         id: String(card.id),
-        phase: card.listName,
+        phase: phaseName(card.listName),
         name: card.name,
         labels: (card.labelList ?? []).map(label => label.labelText)
       }))
@@ -101,22 +104,26 @@ export class SapDiscoveryCenterClient {
     const cards = await this.getJson<RawMissionCard[]>(`/cards?missionId=${instanceId}`, cookie);
     const contents: MissionStepContent[] = [];
     for (const step of steps) {
-      const card = (cards ?? []).find(candidate => candidate.listName === step.phase && candidate.name === step.name);
+      const card = (cards ?? []).find(
+        candidate => phaseName(candidate.listName) === step.phase && candidate.name === step.name
+      );
       if (!card) {
         throw new Error(`Step "${step.name}" is missing from started mission ${instanceId}`);
       }
       const raw = await this.getJson<RawCardContent[]>(`/cards/${card.id}/content?missionId=${instanceId}`, cookie);
       const content = raw?.[0];
       const source = content?.cardTypeRefEntity || null;
+      const markdown = source && content?.cardType === 'GitHub'
+        ? await fetchGitHubMarkdown(source)
+        : stepTextToMarkdown(unwrapContent(content?.cardContent ?? ''));
       contents.push({
         id: step.id,
         phase: step.phase,
         name: step.name,
-        content: source && content?.cardType === 'GitHub'
-          ? await fetchGitHubMarkdown(source)
-          : unwrapContent(content?.cardContent ?? ''),
+        content: markdown,
         type: content?.cardType || null,
-        source
+        source,
+        relatedMissions: relatedMissionIds(markdown, missionId)
       });
     }
     return contents;
@@ -249,7 +256,47 @@ async function fetchGitHubMarkdown(blobUrl: string): Promise<string> {
   if (!response.ok) {
     throw new Error(`GitHub returned ${response.status} for ${rawUrl}`);
   }
-  return response.text();
+  // Authors break lines with <br> inside the markdown; images resolve against the raw file, links against the blob page.
+  const markdown = (await response.text()).replace(/<br\s*\/?>/gi, '\n');
+  return absoluteUrls(markdown, blobUrl, rawUrl);
+}
+
+// Steps written in Discovery Center's own editor are HTML, with links and images relative to the site.
+function stepTextToMarkdown(text: string): string {
+  if (!HTML_TAG.test(text)) return text;
+  return absoluteUrls(turndown.turndown(text), DISCOVERY_CENTER_URL, DISCOVERY_CENTER_URL);
+}
+
+// Makes inline markdown images and links, <img src> and <a href> absolute; reference-style link definitions stay
+// as written. Code spans and fenced blocks are left untouched.
+function absoluteUrls(markdown: string, linkBase: string, imageBase: string): string {
+  const resolve = (url: string, base: string) => (/^([a-z][a-z0-9+.-]*:|#)/i.test(url) ? url : new URL(url, base).href);
+  // Images first: in a linked image "[![alt](img.png)](page.md)" the second pass then only sees relative link targets.
+  const target = (base: string) => (_: string, prefix: string, bracketed: string | undefined, plain: string | undefined) =>
+    `${prefix}${bracketed ? `<${resolve(bracketed, base)}>` : resolve(plain ?? '', base)}`;
+  const resolveProse = (prose: string) => prose
+    .replace(/(!\[[^\]]*\]\(\s*)(?:<([^>]+)>|([^)\s]+))/g, target(imageBase))
+    .replace(/(\]\(\s*)(?:<([^>]+)>|([^)\s]+))/g, target(linkBase))
+    .replace(/(<img\b[^>]*\bsrc=["'])([^"']+)/gi, (_, prefix: string, url: string) => prefix + resolve(url, imageBase))
+    .replace(/(<a\b[^>]*\bhref=["'])([^"']+)/gi, (_, prefix: string, url: string) => prefix + resolve(url, linkBase));
+  // split with a capture group keeps the code parts at the odd indices
+  return markdown
+    .split(/(```[\s\S]*?```|`[^`\n]*`)/)
+    .map((part, index) => (index % 2 ? part : resolveProse(part)))
+    .join('');
+}
+
+// Steps often hand over to other missions, linked as /missiondetail/<mission>/<use case>/.
+function relatedMissionIds(markdown: string, missionId: number): number[] {
+  const ids = [...markdown.matchAll(/discovery-center\.cloud\.sap\/(?:protected\/index\.html#\/)?missiondetail\/(\d+)/g)]
+    .map(match => Number(match[1]))
+    .filter(id => id !== missionId);
+  return [...new Set(ids)];
+}
+
+// The catalog spells phases inconsistently ("Discover", "SET UP"); title case makes them comparable.
+function phaseName(listName: string): string {
+  return listName.trim().toLowerCase().replace(/(^|\s)\S/g, start => start.toUpperCase());
 }
 
 // Steps copied from SAP's step repository store their text as JSON {"content": "..."}.

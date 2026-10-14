@@ -51,12 +51,14 @@ export interface MissionStepContent {
   id: string;
   phase: string;
   name: string;
-  /** Step text as delivered: HTML or markdown, or a GitHub / tutorial URL for linked steps. */
+  /** Step text as markdown with absolute link and image URLs. A linked step of another kind holds its URL. */
   content: string;
-  /** Step kind as set by the mission author, e.g. "github" or "tutorial"; null for plain text. */
+  /** Step kind as set by the mission author, e.g. "GitHub"; null for text written in Discovery Center. */
   type: string | null;
   /** Source a linked step renders from, e.g. a GitHub file or a developers.sap.com tutorial. */
   source: string | null;
+  /** IDs of other missions the step links to, e.g. the per-application follow-up missions. */
+  relatedMissions: number[];
 }
 
 // Mission search item. Product holds comma-separated product and product group IDs.

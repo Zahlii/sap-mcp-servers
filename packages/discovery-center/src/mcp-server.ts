@@ -38,15 +38,25 @@ function errorResult(prefix: string, error: unknown) {
   return { content: [{ type: 'text' as const, text: `${prefix}: ${message}` }], isError: true };
 }
 
-const server = new McpServer({ name: 'sap-discovery-center-mcp', version: PACKAGE_VERSION });
+const server = new McpServer(
+  { name: 'sap-discovery-center-mcp', version: PACKAGE_VERSION },
+  {
+    instructions:
+      'SAP Discovery Center missions only: guided implementation projects on SAP BTP (e.g. setting up Joule, ' +
+      'an Integration Suite scenario), with their prerequisites, required services and step-by-step instructions. ' +
+      'Not the BTP service catalog: for a service entry, its plans, pricing, regions or roadmap, use a ' +
+      'Discovery Center service tool such as sap_discovery_center_search / sap_discovery_center_service.'
+  }
+);
 
 server.registerTool(
   'mission_search',
   {
     title: 'Search SAP Discovery Center Missions',
     description:
-      'Search the SAP Discovery Center mission catalog. Missions are guided, step-by-step implementation projects on SAP BTP, ' +
-      'e.g. "Activate Joule for SAP SuccessFactors" or "Set Up Joule Studio". No SAP login needed. ' +
+      'Search the SAP Discovery Center mission catalog (not the BTP service catalog). Missions are guided, step-by-step ' +
+      'implementation projects on SAP BTP, e.g. "Activate Joule for SAP SuccessFactors" or "Set Up Joule Studio". ' +
+      'Matches mission titles and descriptions, not step texts. No SAP login needed. ' +
       'Follow up with `mission` for prerequisites, services and steps.',
     inputSchema: {
       query: z.string().min(1).describe('Search terms in English: product names or use case keywords.'),
@@ -97,7 +107,8 @@ server.registerTool(
   {
     title: 'Get SAP Discovery Center Mission Step Content',
     description:
-      'Get the instructions of mission steps: HTML or markdown text, or the GitHub / developers.sap.com tutorial a step links to. ' +
+      'Get the instructions of mission steps as markdown with absolute link and image URLs, including the text of a ' +
+      'GitHub file a step links to, plus the IDs of other missions a step hands over to. ' +
       'Requires SAP login. Omit stepId to get every step of the mission. Step texts exist only on a started mission: ' +
       'a mission the user has not started is started under their SAP account and stays in their "My Missions".',
     inputSchema: {
