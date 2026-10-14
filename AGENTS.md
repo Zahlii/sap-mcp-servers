@@ -4,7 +4,7 @@ Guidance for AI agents and humans working in this repo. Read this first.
 
 ## What this repo is
 
-An **npm-workspaces monorepo** holding three SAP MCP servers plus the shared SAP login module they
+An **npm-workspaces monorepo** holding the SAP MCP servers plus the shared SAP login module they
 all build on. Each package is **published to npm independently under its own name** — the monorepo is
 for development only.
 
@@ -18,7 +18,8 @@ sap-mcp-servers/
     ├── auth/      @marianfoo/sap-mcp-auth   — shared SAP IAS/SSO login (Playwright). NO server.
     ├── api-hub/   sap-api-hub-mcp           — MCP server: SAP Business Accelerator Hub
     ├── roadmap/   sap-roadmap-mcp           — MCP server: SAP Road Map Explorer
-    └── notes/     sap-note-search-mcp       — MCP server: SAP Notes / KBAs
+    ├── notes/     sap-note-search-mcp       — MCP server: SAP Notes / KBAs
+    └── discovery-center/ sap-discovery-center-mcp — MCP server: SAP Discovery Center missions
 ```
 
 Not in this repo: `sap-docs` (no auth) and `arc-1` (live-system tooling) — they live in their own
@@ -26,11 +27,11 @@ repos.
 
 ## The one thing to know: build order
 
-`auth` must be built **before** the three servers — they import its compiled types/JS from
+`auth` must be built **before** the servers — they import its compiled types/JS from
 `@marianfoo/sap-mcp-auth`. The root `npm run build` already does this:
 
 ```
-npm run build  ==  build auth  →  then build api-hub + roadmap + notes
+npm run build  ==  build auth  →  then build api-hub + roadmap + notes + discovery-center
 ```
 
 `npm install` symlinks `@marianfoo/sap-mcp-auth` into each server from `packages/auth` (workspace
@@ -44,7 +45,7 @@ to test an auth change locally.
 git clone https://github.com/marianfoo/sap-mcp-servers.git
 cd sap-mcp-servers
 npm install                # all workspaces + the auth symlink + one root lockfile
-npm run build              # auth first, then the three servers
+npm run build              # auth first, then the servers
 npm run install:browsers   # one-time: Chromium for Playwright (also auto-runs via roadmap postinstall)
 ```
 
@@ -72,15 +73,16 @@ entrypoints:
 - `packages/api-hub/dist/mcp-server.js`
 - `packages/roadmap/dist/mcp-server.js`
 - `packages/notes/dist/mcp-server.js` (+ `dist/http-mcp-server.js`)
+- `packages/discovery-center/dist/mcp-server.js`
 
 For wiring them into an MCP client (Claude Code / Cursor / Codex) — including **one shared SSO login
-across all three** — see the skill repo's
+across all of them** — see the skill repo's
 [`MCP_SETUP.md`](https://github.com/marianfoo/sap-api-policy-skill/blob/main/MCP_SETUP.md). Each
 package's own README documents its tools.
 
 ## Shared SAP authentication
 
-All three servers authenticate through `@marianfoo/sap-mcp-auth` (`SapWebAuthenticator`). Each server
+All servers authenticate through `@marianfoo/sap-mcp-auth` (`SapWebAuthenticator`). Each server
 keeps a thin `src/auth.ts` that supplies a service-specific `ServiceProfile` (which URL to open, how
 to scope cookies, how to validate the session) — the login mechanics live once, in the auth package.
 
@@ -89,15 +91,16 @@ Env contract (read by `auth/src/auth-config.ts` → `loadAuthConfigFromEnv`):
 | Var | Purpose | Default |
 | --- | --- | --- |
 | `AUTH_METHOD` | `auto` \| `password` \| `certificate` (`auto` prefers user/pass, falls back to PFX) | `auto` |
-| `SAP_USERNAME` / `SAP_PASSWORD` | IAS form login (same SAP Universal ID / S-user for all three) | — |
+| `SAP_USERNAME` / `SAP_PASSWORD` | IAS form login (same SAP Universal ID / S-user for all servers) | — |
+| `SAP_ACCOUNT_PREFIX` | user-ID prefix to pick on the IAS account chooser when one email owns several SAP accounts (`S`, `P`). api-hub, roadmap and notes build their `AuthConfig` by hand and read it there | `S` |
 | `PFX_PATH` / `PFX_PASSPHRASE` | SAP Passport client-certificate auth | — |
 | `SAP_LOGIN_URL` | first page opened to trigger SSO | `https://me.sap.com/home` |
-| `SAP_SSO_STORAGE_STATE` | shared SSO session file — set the **same absolute path** in all three to log in once | `~/.sap-mcp/sso-storage-state.json` |
+| `SAP_SSO_STORAGE_STATE` | shared SSO session file — set the **same absolute path** in all servers to log in once | `~/.sap-mcp/sso-storage-state.json` |
 | `MAX_JWT_AGE_H` (or `MAX_COOKIE_AGE_H`) | cached session lifetime, hours | `12` |
 | `HEADFUL` | show the browser (needed for first login / MFA) | `false` |
 
 Per-server token caches (auto-managed, never logins): `API_HUB_TOKEN_CACHE_FILE`,
-`ROADMAP_TOKEN_CACHE_FILE`, `SAP_NOTES_TOKEN_CACHE_FILE`. Point these at absolute paths outside
+`ROADMAP_TOKEN_CACHE_FILE`, `SAP_NOTES_TOKEN_CACHE_FILE`, `DISCOVERY_CENTER_TOKEN_CACHE_FILE`. Point these at absolute paths outside
 `node_modules`.
 
 ## Secrets & safety — never commit
@@ -130,8 +133,8 @@ husky `commit-msg` hook (`commitlint`) and on PRs by the `commitlint` CI job. Co
 
 - **Types:** `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `revert`,
   `style` (the Conventional Commits set).
-- **Scope is optional** but, when present, must be one of: `auth`, `api-hub`, `roadmap`, `notes`
-  (the four packages), or `deps` / `release` / `ci` / `repo`. A bogus scope fails the lint.
+- **Scope is optional** but, when present, must be one of: `auth`, `api-hub`, `roadmap`, `notes`,
+  `discovery-center` (the packages), or `deps` / `release` / `ci` / `repo`. A bogus scope fails the lint.
 - `feat` / `fix` show up in the changelog; a `feat!:` or `BREAKING CHANGE:` footer bumps the minor
   while packages are pre-1.0 (`bump-minor-pre-major`).
 
@@ -141,7 +144,7 @@ path is what drives the version.
 
 ### CI — `.github/workflows/ci.yml`
 
-On every PR and push to `main`: `npm ci` → `npm run build` (compiles all four with tsc = the real
+On every PR and push to `main`: `npm ci` → `npm run build` (compiles every package with tsc = the real
 type-check) → `npm run typecheck`, on Node 22.12.0 and the latest Node 22.x. The servers' own `test` scripts hit **live SAP**
 and are deliberately **not** run in CI. PRs also get their commit messages linted (release-please's
 own PRs are skipped).
@@ -162,7 +165,7 @@ You never run `npm version` / `npm publish` by hand — review and merge the rel
 
 ### One-time setup: npm OIDC trusted publishing
 
-`publish-npm` uses **OIDC trusted publishing** (no `NPM_TOKEN` secret). For each of the four packages,
+`publish-npm` uses **OIDC trusted publishing** (no `NPM_TOKEN` secret). For each package,
 configure a trusted publisher once on npmjs.com → *Package → Settings → Trusted Publishers → GitHub
 Actions*:
 

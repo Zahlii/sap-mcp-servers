@@ -4,7 +4,7 @@ Monorepo for the SAP **Model Context Protocol (MCP)** servers and the shared SAP
 module they build on. Managed with **npm workspaces**.
 
 These servers let an AI agent gather evidence from official SAP sources — the Business Accelerator
-Hub, Road Map Explorer, and SAP Notes — from behind SAP login. They power the
+Hub, Road Map Explorer, SAP Notes, and SAP Discovery Center — from behind SAP login. They power the
 [SAP API Policy evidence skill](https://github.com/marianfoo/sap-api-policy-skill), but are usable
 standalone with any MCP client (Claude Code, Cursor, Codex, …).
 
@@ -12,10 +12,11 @@ standalone with any MCP client (Claude Code, Cursor, Codex, …).
 
 | Package (npm) | Dir | Role |
 | --- | --- | --- |
-| [`@marianfoo/sap-mcp-auth`](packages/auth) | `packages/auth` | Shared SAP IAS/SSO browser-login + session module (Playwright). Used by the three servers below. |
+| [`@marianfoo/sap-mcp-auth`](packages/auth) | `packages/auth` | Shared SAP IAS/SSO browser-login + session module (Playwright). Used by the servers below. |
 | [`sap-api-hub-mcp`](packages/api-hub) | `packages/api-hub` | MCP server for the SAP Business Accelerator Hub — Published-API status, specs, docs. |
 | [`sap-roadmap-mcp`](packages/roadmap) | `packages/roadmap` | MCP server for SAP Road Map Explorer — future/planned features (planning only). |
 | [`sap-note-search-mcp`](packages/notes) | `packages/notes` | MCP server for searching SAP Notes / KBAs. |
+| [`sap-discovery-center-mcp`](packages/discovery-center) | `packages/discovery-center` | MCP server for SAP Discovery Center missions and their step instructions. |
 
 Each package is **published to npm independently under its own name** — the monorepo is for
 development. Consumers still install a single server (`npx -y sap-api-hub-mcp`, etc.).
@@ -26,7 +27,7 @@ development. Consumers still install a single server (`npx -y sap-api-hub-mcp`, 
 git clone https://github.com/marianfoo/sap-mcp-servers.git
 cd sap-mcp-servers
 npm install                # installs all workspaces + links @marianfoo/sap-mcp-auth locally
-npm run build              # builds auth first, then the three servers
+npm run build              # builds auth first, then the servers
 npm run install:browsers   # one-time: Chromium for Playwright login (also auto-runs on install)
 ```
 
@@ -41,19 +42,21 @@ Each server is a stdio/HTTP MCP server. See each package's README for its tools 
 - [`packages/api-hub/README.md`](packages/api-hub/README.md)
 - [`packages/roadmap/README.md`](packages/roadmap/README.md)
 - [`packages/notes/README.md`](packages/notes/README.md)
+- [`packages/discovery-center/README.md`](packages/discovery-center/README.md)
 
 For wiring them into an MCP client (Claude Code / Cursor / Codex) with auth, MFA, and a **single
-shared SSO login** across all three, see the skill's
+shared SSO login** across all of them, see the skill's
 **[MCP_SETUP.md](https://github.com/marianfoo/sap-api-policy-skill/blob/main/MCP_SETUP.md)**.
 
 ## Shared SAP authentication
 
-All three servers authenticate to SAP the same way, via `@marianfoo/sap-mcp-auth`:
+All servers authenticate to SAP the same way, via `@marianfoo/sap-mcp-auth`:
 
 - `SAP_USERNAME` / `SAP_PASSWORD` (interactive IAS login on first run), **or** a SAP Passport client
-  certificate (`.pfx`), selected via `AUTH_METHOD`.
+  certificate (`.pfx`), selected via `AUTH_METHOD`. When one email owns several SAP accounts,
+  `SAP_ACCOUNT_PREFIX` (e.g. `S`) picks the one to log in with.
 - A shared **SSO storage-state** file (`SAP_SSO_STORAGE_STATE`) lets you **log in once** and have all
-  three servers reuse the session — see MCP_SETUP.md → *"Authenticate once for all three"*.
+  servers reuse the session — see MCP_SETUP.md → *"Authenticate once for all three"*.
 
 Never commit credentials, `.env`, `*.pfx`, or `*-token-cache.json` — they are gitignored.
 

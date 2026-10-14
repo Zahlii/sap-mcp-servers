@@ -44,6 +44,12 @@
           "jsonpath": "$.version"
         }
       ]
+    },
+    "packages/discovery-center": {
+      "release-type": "node",
+      "component": "sap-discovery-center-mcp",
+      "package-name": "sap-discovery-center-mcp",
+      "initial-version": "0.1.0"
     }
   }
 }

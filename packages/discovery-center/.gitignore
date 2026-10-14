@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+.env.*
+*-token-cache.json
+debug-*.png
+*.tgz

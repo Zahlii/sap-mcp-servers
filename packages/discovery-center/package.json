@@ -1,0 +1,61 @@
+{
+  "name": "sap-discovery-center-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for SAP Discovery Center missions, with step contents behind SAP authentication",
+  "main": "dist/mcp-server.js",
+  "type": "module",
+  "bin": {
+    "sap-discovery-center-mcp": "dist/mcp-server.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "env.example",
+    "LICENSE",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/mcp-server.ts",
+    "serve": "node dist/mcp-server.js",
+    "auth:login": "HEADFUL=true AUTH_LOGIN_ONLY=true node dist/mcp-server.js",
+    "clean": "rimraf dist",
+    "install:browsers": "playwright install chromium",
+    "prepack": "npm run clean && npm run build",
+    "prepublishOnly": "npm run prepack",
+    "pack:check": "npm pack --dry-run"
+  },
+  "keywords": [
+    "sap",
+    "discovery-center",
+    "btp",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marianfoo/sap-mcp-servers.git",
+    "directory": "packages/discovery-center"
+  },
+  "homepage": "https://github.com/marianfoo/sap-mcp-servers/tree/main/packages/discovery-center#readme",
+  "bugs": {
+    "url": "https://github.com/marianfoo/sap-mcp-servers/issues"
+  },
+  "dependencies": {
+    "@marianfoo/sap-mcp-auth": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dotenv": "^18.0.6",
+    "playwright": "^1.64.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "rimraf": "^6.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

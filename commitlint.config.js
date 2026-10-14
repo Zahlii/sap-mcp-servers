@@ -19,6 +19,7 @@ export default {
         'api-hub', // packages/api-hub   → sap-api-hub-mcp
         'roadmap', // packages/roadmap   → sap-roadmap-mcp
         'notes', // packages/notes     → sap-note-search-mcp
+        'discovery-center', // packages/discovery-center → sap-discovery-center-mcp
         'deps', // dependency bumps (Dependabot)
         'release', // release tooling / release-please
         'ci', // CI workflows

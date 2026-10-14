@@ -2,7 +2,7 @@
   "name": "sap-mcp-servers",
   "version": "0.0.0",
   "private": true,
-  "description": "Monorepo for SAP MCP servers (API Hub, Road Map Explorer, SAP Notes) and their shared SAP authentication module.",
+  "description": "Monorepo for SAP MCP servers (API Hub, Road Map Explorer, SAP Notes, Discovery Center) and their shared SAP authentication module.",
   "license": "Apache-2.0",
   "author": "marianfoo",
   "type": "module",
@@ -21,14 +21,15 @@
     "packages/auth",
     "packages/api-hub",
     "packages/roadmap",
-    "packages/notes"
+    "packages/notes",
+    "packages/discovery-center"
   ],
   "scripts": {
-    "build": "npm run build -w @marianfoo/sap-mcp-auth && npm run build -w sap-api-hub-mcp -w sap-roadmap-mcp -w sap-note-search-mcp",
+    "build": "npm run build -w @marianfoo/sap-mcp-auth && npm run build -w sap-api-hub-mcp -w sap-roadmap-mcp -w sap-note-search-mcp -w sap-discovery-center-mcp",
     "build:auth": "npm run build -w @marianfoo/sap-mcp-auth",
     "clean": "npm run clean --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "smoke:bin": "node scripts/smoke-mcp-bin.mjs packages/api-hub sap-api-hub-mcp sap-api-hub-mcp && node scripts/smoke-mcp-bin.mjs packages/roadmap sap-roadmap-mcp sap-roadmap-mcp && node scripts/smoke-mcp-bin.mjs packages/notes sap-note-search-mcp sap-note-search-mcp",
+    "smoke:bin": "node scripts/smoke-mcp-bin.mjs packages/api-hub sap-api-hub-mcp sap-api-hub-mcp && node scripts/smoke-mcp-bin.mjs packages/roadmap sap-roadmap-mcp sap-roadmap-mcp && node scripts/smoke-mcp-bin.mjs packages/notes sap-note-search-mcp sap-note-search-mcp && node scripts/smoke-mcp-bin.mjs packages/discovery-center sap-discovery-center-mcp sap-discovery-center-mcp",
     "test": "npm run test --workspaces --if-present",
     "install:browsers": "playwright install chromium",
     "commitlint": "commitlint --edit",
