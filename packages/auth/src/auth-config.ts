@@ -26,6 +26,7 @@ export function loadAuthConfigFromEnv(options: LoadAuthConfigOptions): AuthConfi
     authMethod: normalizeAuthMethod(env.AUTH_METHOD, options.logger),
     sapUsername: env.SAP_USERNAME || undefined,
     sapPassword: env.SAP_PASSWORD || undefined,
+    sapAccountPrefix: env.SAP_ACCOUNT_PREFIX || undefined,
     pfxPath: resolveOptionalPath(env.PFX_PATH),
     pfxPassphrase: env.PFX_PASSPHRASE || undefined,
     sapLoginUrl: env.SAP_LOGIN_URL || 'https://me.sap.com/home',

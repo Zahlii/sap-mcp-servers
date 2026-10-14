@@ -25,6 +25,11 @@ export interface AuthConfig {
   authMethod: AuthMethod;
   sapUsername?: string;
   sapPassword?: string;
+  /**
+   * Prefix of the SAP user ID to pick when one email address owns several accounts, for example
+   * S for the S-user or P for the partner P-user. Default S; without a match the first account is used.
+   */
+  sapAccountPrefix?: string;
   pfxPath?: string;
   pfxPassphrase?: string;
   /** SAP login start page navigated before the service app URL. Default https://me.sap.com/home. */

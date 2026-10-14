@@ -187,6 +187,15 @@ async function openAuthPage(page: Page, url: string, label: string, logger: Logg
     logger.warn(`${label} DOMContentLoaded wait timed out; continuing with login detection`);
   });
 
+  // An approuter answers a protected page without a session with a stub whose script redirects to the IdP's
+  // /oauth/authorize (XSUAA) or /oauth2/authorize (IAS) after DOMContentLoaded; wait for that redirect so login
+  // detection sees the auth page.
+  if (!isAuthUrl(page.url()) && /\/oauth2?\/authorize/.test(await page.content())) {
+    await page.waitForURL(current => isAuthUrl(current.toString()), { timeout: 5000 }).catch(() => {
+      logger.warn(`${label} approuter redirect to the IdP did not happen within 5s; continuing with login detection`);
+    });
+  }
+
   const committedUrl = page.url();
   const committedTitle = await page.title();
   if (isCustomerIasBootstrapPage(committedUrl, committedTitle)) {
@@ -305,6 +314,7 @@ async function completePasswordLoginIfNeeded(
   await clickFirstVisible(page, SUBMIT_SELECTORS, 'submit', logger);
 
   await page.waitForTimeout(3000);
+  await selectAccountIfAsked(page, config, logger);
   const postLoginUrl = page.url();
   const postLoginTitle = await page.title();
 
@@ -321,6 +331,24 @@ async function completePasswordLoginIfNeeded(
       logger.warn('MFA/redirect wait timed out; checking whether cookies are still usable');
     });
   }
+}
+
+/** SAP IAS shows an account selection page when one email address owns several SAP accounts. */
+async function selectAccountIfAsked(page: Page, config: AuthConfig, logger: Logger): Promise<void> {
+  const accounts = page.locator('button[name="selectedAccount"]');
+  const values = await accounts.evaluateAll(buttons => buttons.map(button => button.getAttribute('value') ?? ''));
+  if (values.length === 0) {
+    return;
+  }
+  const prefix = config.sapAccountPrefix ?? 'S';
+  const matching = values.findIndex(value => value.startsWith(prefix));
+  logger.warn(
+    matching >= 0
+      ? `SAP account chooser: selecting the account with prefix ${prefix}`
+      : `SAP account chooser: no account with prefix ${prefix}, selecting the first; set SAP_ACCOUNT_PREFIX to choose`
+  );
+  await accounts.nth(Math.max(matching, 0)).click();
+  await page.waitForTimeout(3000);
 }
 
 export async function performPasswordLogin(

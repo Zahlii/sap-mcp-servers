@@ -18,6 +18,7 @@ export function createNotesAuthenticator(config: ServerConfig): SapWebAuthentica
     authMethod: config.authMethod,
     sapUsername: config.sapUsername,
     sapPassword: config.sapPassword,
+    sapAccountPrefix: process.env.SAP_ACCOUNT_PREFIX || undefined,
     pfxPath: config.pfxPath || undefined,
     pfxPassphrase: config.pfxPassphrase || undefined,
     sapLoginUrl: config.sapLoginUrl ?? 'https://me.sap.com/home',

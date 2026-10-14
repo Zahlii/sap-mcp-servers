@@ -12,6 +12,7 @@ export function createRoadmapAuthenticator(config: ServerConfig): SapWebAuthenti
     authMethod: config.authMethod,
     sapUsername: config.sapUsername,
     sapPassword: config.sapPassword,
+    sapAccountPrefix: process.env.SAP_ACCOUNT_PREFIX || undefined,
     pfxPath: config.pfxPath,
     pfxPassphrase: config.pfxPassphrase,
     sapLoginUrl: config.sapLoginUrl ?? 'https://me.sap.com/home',
