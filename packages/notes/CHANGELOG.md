@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.3.2](https://github.com/Zahlii/sap-mcp-servers/compare/sap-note-search-mcp-v0.3.9...sap-note-search-mcp-v0.3.2) (2026-10-14)
+
+
+### Features
+
+* **auth:** pick the SAP account by SAP_ACCOUNT_PREFIX and wait for approuter login redirects ([4801d43](https://github.com/Zahlii/sap-mcp-servers/commit/4801d43afd82f3c2d70982bb755ae837af93797d))
+
+
+### Bug Fixes
+
+* **auth:** update authentication flow to use session management and improve cookie handling ([8fcbdb6](https://github.com/Zahlii/sap-mcp-servers/commit/8fcbdb697cc957f2160467f214f35b1779f59ff6))
+* **deps:** refresh SDK and vulnerable dependency resolutions ([#83](https://github.com/Zahlii/sap-mcp-servers/issues/83)) ([e20284b](https://github.com/Zahlii/sap-mcp-servers/commit/e20284b923c92c3896f9d38eb79e6a438cc5c6e6))
+* **notes:** add installable MCPB distribution ([#40](https://github.com/Zahlii/sap-mcp-servers/issues/40)) ([2368546](https://github.com/Zahlii/sap-mcp-servers/commit/23685469887c83d27ce9e958e3f5b46219072237))
+* **notes:** add required CorrIns paging and TCI package URL ([#45](https://github.com/Zahlii/sap-mcp-servers/issues/45)) ([1a840e7](https://github.com/Zahlii/sap-mcp-servers/commit/1a840e7b37e7dbc2431d43ce0a728d3aec039dbd))
+* **notes:** advertise JSON Schema 2020-12 ([#56](https://github.com/Zahlii/sap-mcp-servers/issues/56)) ([4ccdab8](https://github.com/Zahlii/sap-mcp-servers/commit/4ccdab86c807f7314b097b0ba566ebb9b13cbb17))
+* **notes:** extract and harden Detail enriched metadata ([#43](https://github.com/Zahlii/sap-mcp-servers/issues/43)) ([a97b25c](https://github.com/Zahlii/sap-mcp-servers/commit/a97b25c9eca0903fda5cd8d79c240a1ff1601dcb))
+* **notes:** honour HEADFUL=true over stdio and on Windows ([#82](https://github.com/Zahlii/sap-mcp-servers/issues/82)) ([267b0f4](https://github.com/Zahlii/sap-mcp-servers/commit/267b0f4ab265619b07fcd771dacc5e26f9d35598))
+* **notes:** reject rate limits and content-free fallbacks ([#67](https://github.com/Zahlii/sap-mcp-servers/issues/67)) ([407ef6c](https://github.com/Zahlii/sap-mcp-servers/commit/407ef6cf686c205cb54dc9da275e6b7afbd61a9a))
+* **notes:** restore authenticated backend access ([#32](https://github.com/Zahlii/sap-mcp-servers/issues/32)) ([ff8e497](https://github.com/Zahlii/sap-mcp-servers/commit/ff8e497c643ef268161e480de4d73a9a4ff9e3a9))
+* shared SSO state path on Windows, real notes version, keep SSO state on session expiry ([#81](https://github.com/Zahlii/sap-mcp-servers/issues/81)) ([b9ffee1](https://github.com/Zahlii/sap-mcp-servers/commit/b9ffee17604348df056eab591c8eaed1a806604b))
+
+
+### Documentation
+
+* **notes:** note npm build provenance ([603dc5f](https://github.com/Zahlii/sap-mcp-servers/commit/603dc5fb991f576f0699e6eba06e7e2e4775e95d))
+
 ## [0.3.9](https://github.com/marianfoo/sap-mcp-servers/compare/sap-note-search-mcp-v0.3.8...sap-note-search-mcp-v0.3.9) (2026-09-23)
 
 

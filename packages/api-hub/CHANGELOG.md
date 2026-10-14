@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.5](https://github.com/Zahlii/sap-mcp-servers/compare/sap-api-hub-mcp-v0.1.4...sap-api-hub-mcp-v0.1.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* **api-hub:** complete the password login and validate the session ([6a736a4](https://github.com/Zahlii/sap-mcp-servers/commit/6a736a4653999965294a033599d756cf48970247))
+* **deps:** refresh SDK and vulnerable dependency resolutions ([#83](https://github.com/Zahlii/sap-mcp-servers/issues/83)) ([e20284b](https://github.com/Zahlii/sap-mcp-servers/commit/e20284b923c92c3896f9d38eb79e6a438cc5c6e6))
+* shared SSO state path on Windows, real notes version, keep SSO state on session expiry ([#81](https://github.com/Zahlii/sap-mcp-servers/issues/81)) ([b9ffee1](https://github.com/Zahlii/sap-mcp-servers/commit/b9ffee17604348df056eab591c8eaed1a806604b))
+
 ## [0.1.4](https://github.com/marianfoo/sap-mcp-servers/compare/sap-api-hub-mcp-v0.1.3...sap-api-hub-mcp-v0.1.4) (2026-06-17)
 
 
