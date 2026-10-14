@@ -13,6 +13,7 @@ export function createApiHubAuthenticator(config: ServerConfig): SapWebAuthentic
     authMethod: config.authMethod,
     sapUsername: config.sapUsername,
     sapPassword: config.sapPassword,
+    sapAccountPrefix: config.sapAccountPrefix,
     pfxPath: config.pfxPath,
     pfxPassphrase: config.pfxPassphrase,
     // API Hub's OAuth flow can reject stale shared SSO/browser state with
@@ -29,7 +30,8 @@ export function createApiHubAuthenticator(config: ServerConfig): SapWebAuthentic
 
   const profile: ServiceProfile = {
     serviceName: 'SAP API Hub',
-    appUrl: `${config.apiHubBaseUrl}/api/salesorder/overview`,
+    // A protected page: the public overview pages never trigger the login.
+    appUrl: `${config.apiHubBaseUrl}/myworkspace`,
     cookieScope: { type: 'domain', includes: 'api.sap.com', fallbackToAll: true },
     expectedHost: 'api.sap.com',
     validateSession: cookieHeader => new SapApiHubClient(config).validateSession(cookieHeader)

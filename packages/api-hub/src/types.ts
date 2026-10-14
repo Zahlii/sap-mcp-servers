@@ -7,6 +7,7 @@ export interface ServerConfig {
   pfxPassphrase?: string;
   sapUsername?: string;
   sapPassword?: string;
+  sapAccountPrefix?: string;
   authMethod: AuthMethod;
   mfaTimeout: number;
   maxCookieAgeH: number;

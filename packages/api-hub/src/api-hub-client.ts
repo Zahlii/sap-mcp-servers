@@ -29,7 +29,9 @@ export class SapApiHubClient {
 
   async validateSession(cookie: string): Promise<boolean> {
     try {
-      await this.getJson('/api/1.0/containergroup/ContentTypes?$expand=containers($expand=logo)', cookie);
+      // ContentTypes and the search service answer without a session, so they cannot prove a login.
+      // Catalog metadata is protected and returns the login page instead of JSON when the session is missing.
+      await this.getJson("/odata/1.0/catalog.svc/APIContent.APIs('API_PRODUCT_SRV')?$select=Name&$format=json", cookie);
       return true;
     } catch (error) {
       logger.warn('API Hub session validation failed', error);

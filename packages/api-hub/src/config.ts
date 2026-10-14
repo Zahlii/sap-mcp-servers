@@ -49,6 +49,7 @@ export function loadConfig(): ServerConfig {
     pfxPassphrase,
     sapUsername,
     sapPassword,
+    sapAccountPrefix: process.env.SAP_ACCOUNT_PREFIX || undefined,
     authMethod,
     mfaTimeout: Number.parseInt(process.env.MFA_TIMEOUT || '180000', 10),
     maxCookieAgeH: Number.parseInt(process.env.MAX_COOKIE_AGE_H || '12', 10),
