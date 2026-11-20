@@ -15,6 +15,8 @@ export interface ServerConfig {
   logLevel: string;
   apiHubBaseUrl: string;
   tokenCacheFile: string;
+  /** Directory the `spec` tool writes specification bodies to. */
+  specDir: string;
   ssoStorageStateFile?: string;
   sapLoginUrl?: string;
 }

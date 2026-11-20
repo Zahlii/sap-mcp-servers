@@ -231,7 +231,7 @@ Local development:
 }
 ```
 
-Supported `env` keys: `SAP_USERNAME`, `SAP_PASSWORD`, `SAP_ACCOUNT_PREFIX`, `PFX_PATH`, `PFX_PASSPHRASE`, `AUTH_METHOD`, `HEADFUL`, `MFA_TIMEOUT`, `API_HUB_TOKEN_CACHE_FILE`, `ENV_FILE`, `MCP_MODE`.
+Supported `env` keys: `SAP_USERNAME`, `SAP_PASSWORD`, `SAP_ACCOUNT_PREFIX`, `PFX_PATH`, `PFX_PASSPHRASE`, `AUTH_METHOD`, `HEADFUL`, `MFA_TIMEOUT`, `API_HUB_TOKEN_CACHE_FILE`, `API_HUB_SPEC_DIR`, `ENV_FILE`, `MCP_MODE`.
 
 Streamable HTTP MCP client config:
 
@@ -251,7 +251,7 @@ Streamable HTTP MCP client config:
 - `search` - search catalog artifacts, optionally constrained by category or artifact type.
 - `fetch` - fetch normalized metadata for APIs, Events, CDS Views, generic artifacts, or packages.
 - `resources` - summarize API paths, Event channels, CDS fields, or generic artifact sections.
-- `spec` - return full OpenAPI, AsyncAPI, EDMX, CDS JSON, or raw artifact values on explicit request.
+- `spec` - write the full OpenAPI, AsyncAPI, EDMX, CDS JSON, CSN or raw artifact value to a file in `API_HUB_SPEC_DIR` (default `~/.sap-mcp/specs`) and return its path.
 - `package` - fetch package metadata, docs, and artifacts grouped by type/subtype.
 
 ## Safety Boundaries

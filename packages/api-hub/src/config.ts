@@ -57,6 +57,7 @@ export function loadConfig(): ServerConfig {
     logLevel: process.env.LOG_LEVEL || 'info',
     apiHubBaseUrl: process.env.API_HUB_BASE_URL || 'https://api.sap.com',
     tokenCacheFile: process.env.API_HUB_TOKEN_CACHE_FILE || process.env.TOKEN_CACHE_FILE || join(process.cwd(), 'api-hub-token-cache.json'),
+    specDir: resolve(process.env.API_HUB_SPEC_DIR || join(process.env.HOME || homedir(), '.sap-mcp', 'specs')),
     ssoStorageStateFile: resolveOptionalPath(process.env.SAP_SSO_STORAGE_STATE || join(process.env.HOME || homedir(), '.sap-mcp', 'sso-storage-state.json')),
     sapLoginUrl: process.env.SAP_LOGIN_URL || 'https://me.sap.com/home'
   };

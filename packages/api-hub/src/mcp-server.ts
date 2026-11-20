@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { randomUUID } from 'node:crypto';
 import { realpathSync } from 'fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server as HttpServer, type ServerResponse } from 'node:http';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -301,7 +302,7 @@ class SapApiHubMcpServer {
       'spec',
       {
         title: 'Fetch SAP API Hub Specification',
-        description: 'Return the full explicit specification text. APIs support json/yaml/edmx, Events support json/yaml, CDS Views support json, and generic artifacts support raw.',
+        description: 'Download the full specification to a local file; the result holds its path in `file` and its size in bytes, never the body. Specs can be several MB: read or grep the file. APIs support json/yaml/edmx, Events support json/yaml, CDS Views support json, and generic artifacts support raw. A data product\'s API resource (e.g. sap-s4com-SalesOrder-v1) is kind api, format json, and returns CSN.',
         inputSchema: SpecInputSchema
       },
       async ({ id, kind, format, artifactType, version }) => {
@@ -309,19 +310,21 @@ class SapApiHubMcpServer {
           const input: SpecInput = { id, kind, format, artifactType, version };
           validateSpecInput(input);
           const spec = await this.withAuthRetry(token => this.apiHubClient.spec(input, token));
+          const file = await saveSpec(this.config.specDir, input, spec.text);
+          const result = {
+            id,
+            kind,
+            format,
+            version,
+            url: spec.url,
+            contentType: spec.contentType,
+            size: Buffer.byteLength(spec.text),
+            file
+          };
 
           return {
-            content: [{ type: 'text' as const, text: spec.text }],
-            structuredContent: {
-              id,
-              kind,
-              format,
-              version,
-              url: spec.url,
-              status: spec.status,
-              contentType: spec.contentType,
-              size: spec.text.length
-            }
+            content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+            structuredContent: result
           };
         } catch (error) {
           return this.errorResult('API Hub spec failed', error);
@@ -457,6 +460,14 @@ function validateSpecInput(input: SpecInput): void {
   if (!allowed[input.kind]?.includes(input.format)) {
     throw new Error(`Unsupported spec format "${input.format}" for kind "${input.kind}". Supported formats: ${(allowed[input.kind] || []).join(', ')}`);
   }
+}
+
+async function saveSpec(dir: string, input: SpecInput, text: string): Promise<string> {
+  const name = [input.kind, input.artifactType, input.id, input.version].filter(Boolean).join('-').replace(/[^A-Za-z0-9._-]/g, '_');
+  const file = join(dir, `${name}.${input.format}`);
+  await mkdir(dir, { recursive: true });
+  await writeFile(file, text);
+  return file;
 }
 
 function toStructuredContent(value: unknown): Record<string, unknown> {
