@@ -3,9 +3,9 @@
   "manifest_version": "0.2",
   "name": "sap-notes",
   "display_name": "SAP Notes",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Search and retrieve SAP Notes and Knowledge Base Articles.",
-  "long_description": "SAP Notes connects MCP clients to SAP for Me and provides tools to search SAP Notes and Knowledge Base Articles, fetch complete note details, and optionally retrieve correction instructions. It supports username/password, SAP Passport certificate, and shared SSO storage-state authentication.",
+  "long_description": "SAP Notes connects MCP clients to SAP for Me and provides tools to search SAP Notes and Knowledge Base Articles, fetch complete note details and correction instructions, and download attachments to the local filesystem. It supports username/password, SAP Passport certificate, and shared SSO storage-state authentication.",
   "icon": "icon.png",
   "author": {
     "name": "Marian Zeis",
@@ -54,6 +54,14 @@
     {
       "name": "fetch",
       "description": "Fetch the complete details and optional correction instructions for an SAP Note."
+    },
+    {
+      "name": "fetch_attachment",
+      "description": "Download an SAP Note attachment to a new local file without overwriting existing files."
+    },
+    {
+      "name": "support_package_notes",
+      "description": "List the SAP Notes, side-effect solutions, import conditions and object list delivered with an SAP Support Package (e.g. SAPKE608G4)."
     }
   ],
   "keywords": [

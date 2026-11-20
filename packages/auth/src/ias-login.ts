@@ -174,7 +174,28 @@ export function isAuthUrl(url: string): boolean {
 
 async function openAuthPage(page: Page, url: string, label: string, logger: Logger): Promise<void> {
   try {
-    await page.goto(url, { waitUntil: 'commit', timeout: 45000 });
+    const response = await page.goto(url, { waitUntil: 'commit', timeout: 45000 });
+    if (response?.headers()['com.sap.cloud.security.login'] === 'login-request') {
+      // SAP Neo first posts an HTML form through authn.hana.ondemand.com.
+      // Wait for the identity page, not that intermediate SAML form. Do not
+      // reload its URL: SAML requests can be single-use.
+      const serviceOrigin = new URL(url).origin;
+      await page.waitForURL(next => next.origin !== serviceOrigin &&
+        next.origin !== 'https://authn.hana.ondemand.com',
+      { timeout: IAS_BOOTSTRAP_TIMEOUT_MS, waitUntil: 'domcontentloaded' }).catch(() => {
+        // Existing SSO may return straight to the service; the caller still
+        // validates its session after navigation.
+        logger.warn(`${label} SAML redirect wait ended; checking the current page`);
+      });
+      // The identity provider may silently post a SAML response back instead of
+      // showing a login form. Let either outcome settle before filling fields.
+      await Promise.any([
+        page.waitForURL(next => next.origin === serviceOrigin,
+          { timeout: IAS_BOOTSTRAP_TIMEOUT_MS, waitUntil: 'domcontentloaded' }),
+        page.locator(USERNAME_SELECTORS.map(selector => `${selector}:visible`).join(', '))
+          .first().waitFor({ state: 'visible', timeout: IAS_BOOTSTRAP_TIMEOUT_MS })
+      ]).catch(() => logger.warn(`${label} SAML sign-in did not settle; checking the current page`));
+    }
   } catch (error) {
     const currentUrl = page.url();
     if (!currentUrl || currentUrl === 'about:blank') {
@@ -224,11 +245,18 @@ async function tryFillFirstVisible(
   logger: Logger,
   beforeFill?: () => void
 ): Promise<boolean> {
+  // One deadline for the whole phase. Sequential waits used to multiply a
+  // missing password field's 15-second timeout by every supported selector.
+  const visible = await page.waitForSelector(selectors.map(selector => `${selector}:visible`).join(', '),
+    { timeout, state: 'visible' }).catch(() => null);
+  if (!visible) return false;
+  await visible.dispose();
   for (const selector of selectors) {
-    const field = await page.waitForSelector(selector, { timeout, state: 'visible' }).catch(() => null);
-    if (field) {
+    const field = await page.$(`${selector}:visible`);
+    if (field && await field.isVisible()) {
       beforeFill?.();
       await field.click({ clickCount: 3 });
+      beforeFill?.(); // A click must not move credential entry to another origin.
       await field.fill(value);
       logger.warn(`Filled ${label} field using selector ${selector}`);
       return true;
@@ -411,28 +439,33 @@ export async function performInteractiveLogin(
   page: Page,
   config: AuthConfig,
   profile: ServiceProfile,
-  logger: Logger
+  logger: Logger,
+  deadline: number
 ): Promise<void> {
   if (!config.headful) {
     throw new AuthenticationError('Interactive SAP login requires HEADFUL=true');
   }
-  const target = config.sapLoginUrl ?? profile.appUrl;
-  if (!target) {
+  const targets = new Set([config.sapLoginUrl, profile.appUrl].filter((url): url is string => !!url));
+  if (!targets.size) {
     throw new AuthenticationError('No sapLoginUrl or appUrl configured for interactive authentication');
   }
 
-  logger.warn(`Opening SAP login page for manual sign-in: ${target}`);
-  await openAuthPage(page, target, 'SAP login', logger);
-
-  if (isOnAuthPage(page.url(), await page.title())) {
-    logger.warn(`Complete SAP sign-in in the browser window (timeout: ${config.mfaTimeout / 1000}s)`);
-    await page.waitForURL(url => !isAuthUrl(url.toString().toLowerCase()), { timeout: config.mfaTimeout }).catch(() => {
-      logger.warn('Manual login wait timed out; checking whether cookies are still usable');
-    });
+  // The identity provider login can succeed before the application has issued its cookies.
+  logger.warn(`Sign in to ${profile.serviceName} in the browser window. Select Log On if the service opens a public page.`);
+  for (const target of targets) {
+    logger.warn(`Opening ${target} for interactive sign-in`);
+    await openAuthPage(page, target, 'SAP login', logger);
+    for (;;) {
+      if (page.isClosed()) throw new AuthenticationError('Browser window closed before SAP sign-in completed');
+      const title = await page.title().catch((error: Error) => {
+        // A redirect can replace the document while Playwright reads its title.
+        if (/execution context was destroyed|navigation/i.test(error.message)) return null;
+        throw error;
+      });
+      if (title !== null && !isOnAuthPage(page.url(), title)) break;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) throw new AuthenticationError('Manual SAP login did not complete before the timeout');
+      await page.waitForTimeout(Math.min(500, remaining));
+    }
   }
-
-  if (isOnAuthPage(page.url(), await page.title())) {
-    throw new AuthenticationError('Manual SAP login did not complete before the timeout');
-  }
-  logger.warn('Manual SAP login completed');
 }

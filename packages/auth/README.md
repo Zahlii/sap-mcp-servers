@@ -176,9 +176,66 @@ identity provider.
 
 `isOnAuthPage`, `isAuthUrl`, `selectCookies`, `serializeCookies`, `defaultLogger`, and the error classes `AuthenticationError`, `CertificateLoadError`, `AuthenticationTimeoutError`, `BrowserNotFoundError`. The `Logger` interface lets you inject your own logger (`{ warn, error, info, debug }`); a stderr `defaultLogger` is used otherwise.
 
+### `CertHttpsClient`: certificate login without a browser
+
+For SAP services that accept the SAP Passport on every request, such as the Software Center OData
+service and `softwaredownloads.sap.com`, `CertHttpsClient` needs no Playwright. Import it from the
+subpath `@marianfoo/sap-mcp-auth/cert-client`, which does not load the browser login:
+
+```ts
+import { readFileSync } from 'node:fs';
+import { CertHttpsClient } from '@marianfoo/sap-mcp-auth/cert-client';
+
+const client = new CertHttpsClient({ pfx: readFileSync(process.env.PFX_PATH!), passphrase: process.env.PFX_PASSPHRASE });
+const res = await client.fetch('https://launchpad.support.sap.com/services/odata/svt/swdcuisrv/DownloadAuthProfileSet?$format=json');
+```
+
+Each call follows redirects and posts SAML auto-submit pages (a form of hidden fields only) until
+the final response; `open()` leaves its body a stream, for downloads. One in-memory cookie jar
+(Domain, Path, expiry) spans all hosts; `reset()` clears it. Only HTTPS is followed. A page with a
+visible field, such as a login form, is returned instead of posted. The logger gets each form step
+and hop as method, host, path and status: never a query string, cookie or form value.
+
+To fetch large HTML documents, set `walkForms: false`. Automatic form detection reads up to 2 MiB of HTML. Caller headers apply to the initial origin. Establish the session with a GET before a write or a ranged download, then send the intended method and headers to the resource.
+
+A BTP app behind an approuter needs one more step. Without a session, it answers with a page whose
+script sets cookies and sends the browser to XSUAA. The XSUAA login page names its identity provider
+in a meta redirect. `approuterLogin(target, page)` takes that page and does both steps in code. The
+redirects and the SAML forms do the rest, up to the app's callback, which sets the session. Then
+call the resource again:
+
+```ts
+let res = await client.fetch(url, { headers: { Accept: 'application/json' } });
+if (String(res.headers['content-type']).includes('html') && await client.approuterLogin(url, res.body.toString('utf8'))) {
+  res = await client.fetch(url, { headers: { Accept: 'application/json' } });
+}
+```
+
+Set `trustedOrigins` on the client to the exact HTTPS origins for your BTP app, XSUAA tenant and identity provider. The built-in origins are `https://accounts.sap.com`, `https://launchpad.support.sap.com` and `https://softwaredownloads.sap.com`. Every network request, including redirects and SAML form submissions, checks this list before presenting the client certificate. Use explicit tenant URLs. A successful approuter walk returns to the application origin; retry the resource there to confirm access.
+
 ## Security
 
 The `tokenCacheFile` and the SSO `storageStateFile` contain **live SAP session cookies**. Treat them as secrets: store them outside your repo (e.g. `~/.sap-mcp/`), never commit them, and add them to `.gitignore`. Credentials and passphrases are never written to these files, but the cookies they hold can be used to act as you on SAP services until they expire.
+
+### Finding and recovering cached sessions
+
+**For MCP clients, set the shared-state path and each service's token-cache path to explicit absolute
+paths outside `node_modules`.** The resolved paths are logged at startup, without cookie contents.
+
+| State | Override | Default when unset |
+| --- | --- | --- |
+| Shared SSO | `SAP_SSO_STORAGE_STATE` | `~/.sap-mcp/sso-storage-state.json` in the user's home |
+| API Hub | `API_HUB_TOKEN_CACHE_FILE` (then `TOKEN_CACHE_FILE`) | `api-hub-token-cache.json` in the process working directory |
+| Road Map | `ROADMAP_TOKEN_CACHE_FILE` (then `TOKEN_CACHE_FILE`) | `roadmap-token-cache.json` in the process working directory |
+| Notes | `SAP_NOTES_TOKEN_CACHE_FILE` (then `TOKEN_CACHE_FILE`) | `token-cache.json` in the installed Notes package directory |
+
+Create the parent directory, not an empty state file. Malformed state is ignored during login; it
+is replaced only after a successful, service-validated login. Rejected service caches trigger fresh
+authentication. A temporary validation outage is reported and preserves the cached session.
+
+If login needs MFA, run once with `HEADFUL=true` and complete the browser login. Notes honors this
+on Windows and when launched over stdio. Explicit `DOCKER_ENV=true` or `CI=true` still forces its
+browser to run headless. Use the same absolute SSO path when returning to the MCP client.
 
 ## Tests
 

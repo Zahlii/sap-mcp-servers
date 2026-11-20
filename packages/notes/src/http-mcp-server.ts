@@ -24,6 +24,8 @@ import {
   SAP_NOTE_GET_DESCRIPTION
 } from './schemas/sap-notes.js';
 import { parseNoteContent } from './html-utils.js';
+import { registerSupportPackageTool } from './support-package-tool.js';
+import { escapeSseLineSeparators } from './sse-line-separators.js';
 
 // Get the directory of this module for resolving paths
 const __filename = fileURLToPath(import.meta.url);
@@ -413,6 +415,8 @@ class HttpSapNoteMcpServer {
       }
     );
 
+    registerSupportPackageTool(mcp, this.sapNotesClient, fn => this.withAuthRetry(fn));
+
     return mcp;
   }
 
@@ -427,7 +431,7 @@ class HttpSapNoteMcpServer {
         server: 'sap-note-search-mcp',
         version: SERVER_VERSION,
         protocol: 'streamable-http',
-        tools: ['search', 'fetch']
+        tools: ['search', 'fetch', 'support_package_notes']
       });
     });
 
@@ -460,9 +464,9 @@ class HttpSapNoteMcpServer {
       }
     };
 
-    this.app.get('/mcp', this.authMiddleware, mcpHandler);
-    this.app.post('/mcp', this.authMiddleware, mcpHandler);
-    this.app.delete('/mcp', this.authMiddleware, mcpHandler);
+    this.app.get('/mcp', this.authMiddleware, escapeSseLineSeparators, mcpHandler);
+    this.app.post('/mcp', this.authMiddleware, escapeSseLineSeparators, mcpHandler);
+    this.app.delete('/mcp', this.authMiddleware, escapeSseLineSeparators, mcpHandler);
 
     this.app.options('/mcp', (_req: express.Request, res: express.Response) => {
       res.status(200).end();

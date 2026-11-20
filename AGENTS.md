@@ -75,8 +75,7 @@ entrypoints:
 - `packages/notes/dist/mcp-server.js` (+ `dist/http-mcp-server.js`)
 - `packages/discovery-center/dist/mcp-server.js`
 
-For wiring them into an MCP client (Claude Code / Cursor / Codex) — including **one shared SSO login
-across all of them** — see the skill repo's
+For wiring them into an MCP client (Claude Code / Cursor / Codex) with auth and MFA, see the skill repo's
 [`MCP_SETUP.md`](https://github.com/marianfoo/sap-api-policy-skill/blob/main/MCP_SETUP.md). Each
 package's own README documents its tools.
 
@@ -94,8 +93,8 @@ Env contract (read by `auth/src/auth-config.ts` → `loadAuthConfigFromEnv`):
 | `SAP_USERNAME` / `SAP_PASSWORD` | IAS form login (same SAP Universal ID / S-user for all servers) | — |
 | `SAP_ACCOUNT_PREFIX` | user-ID prefix to pick on the IAS account chooser when one email owns several SAP accounts (`S`, `P`). api-hub, roadmap and notes build their `AuthConfig` by hand and read it there | `S` |
 | `PFX_PATH` / `PFX_PASSPHRASE` | SAP Passport client-certificate auth | — |
-| `SAP_LOGIN_URL` | first page opened to trigger SSO | `https://me.sap.com/home` |
-| `SAP_SSO_STORAGE_STATE` | shared SSO session file — set the **same absolute path** in all servers to log in once | `~/.sap-mcp/sso-storage-state.json` |
+| `SAP_LOGIN_URL` | first page opened for Notes/Roadmap SSO | `https://me.sap.com/home` |
+| `SAP_SSO_STORAGE_STATE` | shared SSO session file — used by Notes and Roadmap; API Hub uses its own service cache | `~/.sap-mcp/sso-storage-state.json` |
 | `MAX_JWT_AGE_H` (or `MAX_COOKIE_AGE_H`) | cached session lifetime, hours | `12` |
 | `HEADFUL` | show the browser (needed for first login / MFA) | `false` |
 
@@ -162,6 +161,13 @@ Fully automated, per package:
    packages that were just released** (`paths_released`) to npm with **provenance**.
 
 You never run `npm version` / `npm publish` by hand — review and merge the release PR.
+
+If npm accepts a publish but the new version is still processing, the workflow polls for its
+availability before continuing. This can take several minutes. If it times out, verify the exact
+version with `npm view <package>@<version> version --prefer-online`, then **re-run failed jobs** on
+the original release run (`gh run rerun <run-id> --failed`). Already available versions are skipped.
+Keep the existing tags and versions; a full rerun of release-please may no longer report the
+original releases. Confirm the server packages and the Notes MCPB assets after recovery.
 
 ### One-time setup: npm OIDC trusted publishing
 

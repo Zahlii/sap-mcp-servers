@@ -21,7 +21,8 @@ This [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server giv
 
 ## Features
 
-- **Two MCP tools** — `search` (find notes) and `fetch` (retrieve full content + metadata)
+- **Search and fetch** — find notes and retrieve full content with metadata over stdio or HTTP
+- **Attachment downloads** — `fetch_attachment` saves referenced files locally over stdio, without overwriting existing files
 - **Enriched metadata** — validity ranges, support packages and patches, references, prerequisites, side effects, correction summaries, attachments
 - **Optional correction details** — `fetch(includeCorrections=true)` retrieves detailed ABAP correction instructions (affected objects, per-correction prerequisites) via an additional OData call
 - **Two auth methods** — username/password (recommended) or SAP Passport certificate
@@ -236,6 +237,39 @@ Generic HTML and fallback JSON without note text are not returned as successful 
 Get the full content of SAP Note 2744792
 Show me note 3481252 with correction details
 ```
+
+### `support_package_notes`
+
+Lists what an SAP Support Package delivers — the same data as SAP for Me → Software Downloads → package details
+(tabs *SAP Notes*, *Side-Effect Solutions*, *Package Conditions*, *Object List*).
+
+```json
+{ "package": "SAPKE608G4", "include": ["notes", "sideEffects"], "component": "PY-DE" }
+```
+
+| Parameter | Description |
+|---|---|
+| `package` | SP name as shown in the download center (e.g. `SAPKE608G4`, `SAPK-60899INSAPHRCDE`) or the numeric download object key |
+| `include` | `notes` (default), `sideEffects`, `conditions`, `objects` |
+| `component` | Optional component prefix filter for notes, e.g. `PY-DE` |
+| `maxNotes` / `maxObjects` | Maximum notes and objects returned (defaults 100 / 300). A component filter searches up to 5000 notes before applying the output limit. |
+| `lang` | `EN` (default) or `DE` for priority/category texts |
+
+Uses the `swdcuisap4mesrv` OData service behind me.sap.com with the same session as `fetch`; your S-user needs
+software download authorization. If a name search returns no match, copy the numeric key from the end of the package URL in SAP for Me (`/softwarecenter/object/<key>`) and pass it as `package`.
+
+### `fetch_attachment` (stdio)
+
+Pass an attachment URL returned by `fetch` to download that file locally. Optional `outputDir`
+selects an existing directory; otherwise the tool creates a private temporary directory. Optional
+`filename` overrides the server-provided name. Existing files are never overwritten.
+
+The result contains the saved path, filename, content type, byte count and SHA-256. Downloads are
+limited to 100 MiB, 60 seconds per download attempt and five checked redirects. If SAP Documents
+requires a separate sign-in, the tool uses your configured SAP credentials once, then retries the
+download. Later calls reuse the document cookies, including after restart. The working Notes session
+is preserved. If SAP rejects the sign-in, correct the credentials or use interactive login and restart
+the server before retrying. Set `HEADFUL=true` if your account requires interactive sign-in or MFA. See [the tool reference](docs/tools.md#fetch_attachment) for details.
 
 ---
 

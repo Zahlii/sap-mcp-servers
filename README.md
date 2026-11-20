@@ -44,8 +44,7 @@ Each server is a stdio/HTTP MCP server. See each package's README for its tools 
 - [`packages/notes/README.md`](packages/notes/README.md)
 - [`packages/discovery-center/README.md`](packages/discovery-center/README.md)
 
-For wiring them into an MCP client (Claude Code / Cursor / Codex) with auth, MFA, and a **single
-shared SSO login** across all of them, see the skill's
+For wiring them into an MCP client (Claude Code / Cursor / Codex) with auth and MFA, see the skill's
 **[MCP_SETUP.md](https://github.com/marianfoo/sap-api-policy-skill/blob/main/MCP_SETUP.md)**.
 
 ## Shared SAP authentication
@@ -55,8 +54,7 @@ All servers authenticate to SAP the same way, via `@marianfoo/sap-mcp-auth`:
 - `SAP_USERNAME` / `SAP_PASSWORD` (interactive IAS login on first run), **or** a SAP Passport client
   certificate (`.pfx`), selected via `AUTH_METHOD`. When one email owns several SAP accounts,
   `SAP_ACCOUNT_PREFIX` (e.g. `S`) picks the one to log in with.
-- A shared **SSO storage-state** file (`SAP_SSO_STORAGE_STATE`) lets you **log in once** and have all
-  servers reuse the session — see MCP_SETUP.md → *"Authenticate once for all three"*.
+- For browser sign-in, use `HEADFUL=true`. Notes and Roadmap can share `SAP_SSO_STORAGE_STATE`. Roadmap must visit its own app to obtain service cookies. API Hub signs in directly in a fresh browser context and reuses its own validated token cache.
 
 Never commit credentials, `.env`, `*.pfx`, or `*-token-cache.json` — they are gitignored.
 
