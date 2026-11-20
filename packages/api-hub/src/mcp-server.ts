@@ -228,7 +228,7 @@ class SapApiHubMcpServer {
       'search',
       {
         title: 'Search SAP API Hub',
-        description: 'Search SAP Business Accelerator Hub artifacts. Optional categoryKey examples: API, Events, CDSViews, S4HANACloudBADI. Optional artifactType examples: API, Event, CDSVIEW, BADI.',
+        description: 'Search SAP Business Accelerator Hub artifacts. Optional categoryKey examples: API, Events, CDSViews, S4HANACloudBADI. Optional artifactType examples: API, Event, CDSVIEW, BADI. Data products have no category of their own: they are listed as API artifacts with subType DELTAAPI, in a package named "... Data Products API"; their entities and fields come only from `spec`.',
         inputSchema: SearchInputSchema
       },
       async ({ q, categoryKey, artifactType, top, skip }) => {
@@ -279,7 +279,7 @@ class SapApiHubMcpServer {
       'resources',
       {
         title: 'Fetch SAP API Hub Resource Summary',
-        description: 'Return API paths, Event channels, CDS View fields/capabilities/business contexts, or generic artifact sections without returning full specs.',
+        description: 'Return API paths, Event channels, CDS View fields/capabilities/business contexts, or generic artifact sections without returning full specs. A data product shows no paths here: its entities are only in the `spec` file.',
         inputSchema: ResourcesInputSchema
       },
       async ({ id, kind, artifactType, version }) => {

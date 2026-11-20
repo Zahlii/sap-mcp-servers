@@ -3,7 +3,6 @@ import type {
   ApiHubSearchResponse,
   FetchInput,
   GenericValue,
-  JsonObject,
   PackageInput,
   RawResponse,
   ResourcesInput,
@@ -39,12 +38,12 @@ export class SapApiHubClient {
     }
   }
 
-  async categories(cookie: string): Promise<{ categories: ApiHubCategory[]; raw: unknown }> {
+  async categories(cookie: string): Promise<{ categories: ApiHubCategory[] }> {
     const raw = await this.getJson('/api/1.0/containergroup/ContentTypes?$expand=containers($expand=logo)', cookie);
     const containers = collectContainers(raw);
     const categories = containers.map(normalizeCategory).filter((category): category is ApiHubCategory => Boolean(category));
 
-    return { categories, raw };
+    return { categories };
   }
 
   async search(input: SearchInput, cookie: string): Promise<ApiHubSearchResponse> {
@@ -69,8 +68,7 @@ export class SapApiHubClient {
       total,
       top: input.top,
       skip: input.skip,
-      results,
-      raw
+      results
     };
   }
 
@@ -488,8 +486,7 @@ function normalizeCategory(container: AnyRecord): ApiHubCategory | undefined {
     description: cleanText(pickString(container, 'Description', 'description')),
     packageCount: asNumber(pickValue(aggregation, 'TotalPackages', 'PackageCount', 'Packages') ?? pickValue(container, 'packageCount', 'PackageCount')),
     artifactCount: asNumber(pickValue(aggregation, 'TotalArtifacts', 'ArtifactCount', 'Artifacts') ?? pickValue(container, 'artifactCount', 'ArtifactCount')),
-    subtypeCounts: extractSubtypeCounts(aggregation),
-    raw: toJsonObject(container)
+    subtypeCounts: extractSubtypeCounts(aggregation)
   };
 }
 
@@ -514,8 +511,7 @@ function normalizeSearchResults(raw: unknown, baseUrl: string, input: SearchInpu
       status: pickString(source, 'Status'),
       version: pickString(source, 'Version', 'Release'),
       description: cleanText(pickString(source, 'Description', 'ShortDescription', 'Summary')),
-      url: canonicalUrl(baseUrl, inferKindFromSearch(categoryKey, artifactType), id),
-      raw: toJsonObject(source)
+      url: canonicalUrl(baseUrl, inferKindFromSearch(categoryKey, artifactType), id)
     };
   }).filter(result => result.id);
 }
@@ -1159,10 +1155,6 @@ function asNumber(value: unknown): number | undefined {
     return Number.isNaN(parsed) ? undefined : parsed;
   }
   return undefined;
-}
-
-function toJsonObject(value: unknown): JsonObject | undefined {
-  return isRecord(value) ? value as JsonObject : undefined;
 }
 
 function isRecord(value: unknown): value is AnyRecord {

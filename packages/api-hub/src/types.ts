@@ -28,7 +28,6 @@ export interface ApiHubCategory {
   packageCount?: number;
   artifactCount?: number;
   subtypeCounts?: Record<string, number>;
-  raw?: JsonObject;
 }
 
 export interface SearchInput {
@@ -54,7 +53,6 @@ export interface ApiHubSearchResult {
   version?: string;
   description?: string;
   url?: string;
-  raw?: JsonObject;
 }
 
 export interface ApiHubSearchResponse {
@@ -62,7 +60,6 @@ export interface ApiHubSearchResponse {
   top: number;
   skip: number;
   results: ApiHubSearchResult[];
-  raw?: unknown;
 }
 
 export interface FetchInput {
@@ -91,11 +88,6 @@ export interface PackageInput {
   id: string;
   includeArtifacts: boolean;
   top: number;
-}
-
-export type JsonValue = null | boolean | number | string | JsonValue[] | JsonObject;
-export interface JsonObject {
-  [key: string]: JsonValue | undefined;
 }
 
 export interface RawResponse {
