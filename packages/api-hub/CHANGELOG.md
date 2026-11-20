@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.2](https://github.com/Zahlii/sap-mcp-servers/compare/sap-api-hub-mcp-v0.1.5...sap-api-hub-mcp-v0.1.2) (2026-11-20)
+
+
+### Features
+
+* **api-hub:** point agents at spec for data products; slim search results ([224bbd1](https://github.com/Zahlii/sap-mcp-servers/commit/224bbd14f9d7bde09dd4b398b544d2c8ee2faed5))
+* **api-hub:** spec writes the body to a file and returns its path ([0785c74](https://github.com/Zahlii/sap-mcp-servers/commit/0785c74d7bc491b3e231a601f4c06a411125efd9))
+
+
+### Bug Fixes
+
+* **api-hub:** complete the password login and validate the session ([6a736a4](https://github.com/Zahlii/sap-mcp-servers/commit/6a736a4653999965294a033599d756cf48970247))
+* **auth:** complete interactive sign-in at the target SAP service ([#106](https://github.com/Zahlii/sap-mcp-servers/issues/106)) ([58e4804](https://github.com/Zahlii/sap-mcp-servers/commit/58e48040dd2efae04ff5a32d5a51ff2eb3ba78b6))
+* **deps:** refresh SDK and vulnerable dependency resolutions ([#83](https://github.com/Zahlii/sap-mcp-servers/issues/83)) ([e20284b](https://github.com/Zahlii/sap-mcp-servers/commit/e20284b923c92c3896f9d38eb79e6a438cc5c6e6))
+* shared SSO state path on Windows, real notes version, keep SSO state on session expiry ([#81](https://github.com/Zahlii/sap-mcp-servers/issues/81)) ([b9ffee1](https://github.com/Zahlii/sap-mcp-servers/commit/b9ffee17604348df056eab591c8eaed1a806604b))
+* stabilize API Hub authentication ([#13](https://github.com/Zahlii/sap-mcp-servers/issues/13)) ([b584fba](https://github.com/Zahlii/sap-mcp-servers/commit/b584fba4a07eeeb2d0a0d9c33949546e1edbd070))
+* symlinked MCP bin startup ([#17](https://github.com/Zahlii/sap-mcp-servers/issues/17)) ([74cfac0](https://github.com/Zahlii/sap-mcp-servers/commit/74cfac0620c5db8caf68769d329162f977cbd141))
+
+
+### Documentation
+
+* **api-hub:** note npm build provenance ([c1a298a](https://github.com/Zahlii/sap-mcp-servers/commit/c1a298a5f6803470650d439c61bde05bd1b80741))
+
 ## [0.1.5](https://github.com/marianfoo/sap-mcp-servers/compare/sap-api-hub-mcp-v0.1.4...sap-api-hub-mcp-v0.1.5) (2026-10-17)
 
 
